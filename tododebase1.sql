@@ -6,7 +6,7 @@
 ---Crear los database links
 -------NOTA: cambiar el host por la IP de la instancia, es importante prender los contenedores en orden, porque el primero que enciende es el primero que tiene la primera ip
 create database link link_b1_a_b2 connect to system identified by "123" using '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=172.17.0.3)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))';
-create database link link_b2_a_b1 connect to system identified by "123" using '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=172.17.0.2)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))';
+----create database link link_b2_a_b1 connect to system identified by "123" using '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=172.17.0.2)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))';
 
 --- Creacion de sinonimos
 
@@ -64,17 +64,6 @@ SELECT * FROM itemsb2;
 --- Creacion de triggers
 
 ---Para customers
-CREATE OR REPLACE TRIGGER trg_replicacion_insertar_customers
-BEFORE INSERT ON CUSTOMERS
-FOR EACH ROW
-BEGIN
-    IF :NEW.REGION NOT IN ('A', 'B') THEN
-        INSERT INTO customersb2 (CUSTOMER_ID, CUST_FIRST_NAME, CUST_LAST_NAME, CREDIT_LIMIT, CUST_EMAIL, INCOME_LEVEL, REGION)
-        VALUES (:NEW.CUSTOMER_ID, :NEW.CUST_FIRST_NAME, :NEW.CUST_LAST_NAME, :NEW.CREDIT_LIMIT, :NEW.CUST_EMAIL, :NEW.INCOME_LEVEL, :NEW.REGION);
-        RAISE_APPLICATION_ERROR(-20001, 'La región no es A ni B, insertado en la base 2');
-    END IF;
-END;
-/
 
 CREATE OR REPLACE TRIGGER trg_replicacion_actualizar_customers
 BEFORE UPDATE ON CUSTOMERS
@@ -107,26 +96,7 @@ END;
 /
 
 --Para ORDERS
-CREATE OR REPLACE TRIGGER trg_replicacion_insertar_orders
-BEFORE INSERT ON ORDERS
-FOR EACH ROW
-DECLARE
-    v_region CHAR(1);
-BEGIN
-    DBMS_MVIEW.REFRESH('MV_CUSTOMERS_GLOBAL', 'C');
-    BEGIN
-        SELECT REGION INTO v_region
-        FROM mv_customers_global c
-        WHERE c.CUSTOMER_ID = :NEW.CUSTOMER_ID;
-    END;
 
-    IF v_region NOT IN ('A', 'B') THEN
-        INSERT INTO ordersb2 (ORDER_ID, ORDER_DATE, ORDER_MODE, CUSTOMER_ID, ORDER_STATUS, ORDER_TOTAL, SALES_REP_ID, PROMOTION_ID)
-        VALUES (:NEW.ORDER_ID, :NEW.ORDER_DATE, :NEW.ORDER_MODE, :NEW.CUSTOMER_ID, :NEW.ORDER_STATUS, :NEW.ORDER_TOTAL, :NEW.SALES_REP_ID, :NEW.PROMOTION_ID);
-                RAISE_APPLICATION_ERROR(-20001, 'La región del cliente no es A ni B, pedido insertado en la base 2');
-    END IF;
-END;
-/
 
 CREATE OR REPLACE TRIGGER trg_replicacion_actualizar_orders
 BEFORE UPDATE ON ORDERS
@@ -178,29 +148,6 @@ END;
 /
 
 -- PARA Order_items
-CREATE OR REPLACE TRIGGER trg_replicacion_insertar_order_items
-BEFORE INSERT ON ORDER_ITEMS
-FOR EACH ROW
-DECLARE
-    v_region CHAR(1);
-BEGIN
-    DBMS_MVIEW.REFRESH('MV_CUSTOMERS_GLOBAL', 'C');
-    DBMS_MVIEW.REFRESH('MV_ORDERS_GLOBAL', 'C');
-
-    BEGIN
-        SELECT REGION INTO v_region
-        FROM mv_customers_global c
-        JOIN mv_orders_global o ON c.CUSTOMER_ID = o.CUSTOMER_ID
-        WHERE o.ORDER_ID = :NEW.ORDER_ID;
-    END;
-
-    IF v_region NOT IN ('A', 'B') THEN
-        INSERT INTO itemsb2 (ORDER_ID, LINE_ITEM_ID, PRODUCT_ID, UNIT_PRICE, QUANTITY)
-        VALUES (:NEW.ORDER_ID, :NEW.LINE_ITEM_ID, :NEW.PRODUCT_ID, :NEW.UNIT_PRICE, :NEW.QUANTITY);
-        RAISE_APPLICATION_ERROR(-20001, 'La región del cliente no es A ni B, item de pedido insertado en la base 2');
-    END IF;
-END;
-/
 
 CREATE OR REPLACE TRIGGER trg_replicacion_actualizar_order_items
 BEFORE UPDATE ON ORDER_ITEMS
@@ -304,17 +251,32 @@ CREATE OR REPLACE PROCEDURE insert_customer(
     p_income_level IN VARCHAR2,
     p_region IN VARCHAR2
 ) AS
-    v_count NUMBER;
+    v_customer_count NUMBER;
 BEGIN
-    SELECT COUNT(*) INTO v_count FROM CUSTOMERS WHERE CUSTOMER_ID = p_customer_id;
-    IF v_count = 0 THEN
-        INSERT INTO CUSTOMERS (CUSTOMER_ID, CUST_FIRST_NAME, CUST_LAST_NAME, CREDIT_LIMIT, CUST_EMAIL, INCOME_LEVEL, REGION)
-        VALUES (p_customer_id, p_first_name, p_last_name, p_credit_limit, p_email, p_income_level, p_region);
+    SELECT COUNT(*)
+    INTO v_customer_count
+    FROM CUSTOMERS
+    WHERE CUSTOMER_ID = p_customer_id;
+
+    IF v_customer_count = 0 THEN
+        IF p_region IN ('A', 'B') THEN
+            INSERT INTO CUSTOMERS (CUSTOMER_ID, CUST_FIRST_NAME, CUST_LAST_NAME, CREDIT_LIMIT, CUST_EMAIL, INCOME_LEVEL, REGION)
+            VALUES (p_customer_id, p_first_name, p_last_name, p_credit_limit, p_email, p_income_level, p_region);
+        ELSE
+            INSERT INTO customersb2 (CUSTOMER_ID, CUST_FIRST_NAME, CUST_LAST_NAME, CREDIT_LIMIT, CUST_EMAIL, INCOME_LEVEL, REGION)
+            VALUES (p_customer_id, p_first_name, p_last_name, p_credit_limit, p_email, p_income_level, p_region);
+        END IF;
+        COMMIT;
     ELSE
-        DBMS_OUTPUT.PUT_LINE('El cliente con ID ' || p_customer_id || ' ya existe.');
+        RAISE_APPLICATION_ERROR(-20001, 'El cliente ya existe');
     END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
 END;
 /
+
 
 CREATE OR REPLACE PROCEDURE insert_order(
     p_order_id IN NUMBER,
@@ -325,38 +287,73 @@ CREATE OR REPLACE PROCEDURE insert_order(
     p_order_total IN NUMBER,
     p_sales_rep_id IN NUMBER,
     p_promotion_id IN NUMBER
-) AS
-    v_count NUMBER;
+) IS
+    v_region CHAR(1);
+    v_order_count NUMBER;
 BEGIN
-    SELECT COUNT(*) INTO v_count FROM ORDERS WHERE ORDER_ID = p_order_id;
-    IF v_count = 0 THEN
-        INSERT INTO ORDERS (ORDER_ID, ORDER_DATE, ORDER_MODE, CUSTOMER_ID, ORDER_STATUS, ORDER_TOTAL, SALES_REP_ID, PROMOTION_ID)
-        VALUES (p_order_id, p_order_date, p_order_mode, p_customer_id, p_order_status, p_order_total, p_sales_rep_id, p_promotion_id);
+    DBMS_MVIEW.REFRESH('MV_CUSTOMERS_GLOBAL', 'C');
+
+    SELECT REGION INTO v_region
+    FROM MV_CUSTOMERS_GLOBAL
+    WHERE CUSTOMER_ID = p_customer_id;
+
+    SELECT COUNT(*)
+    INTO v_order_count
+    FROM ORDERS
+    WHERE ORDER_ID = p_order_id;
+
+    IF v_order_count = 0 THEN
+        IF v_region IN ('A', 'B') THEN
+            INSERT INTO ORDERS (ORDER_ID, ORDER_DATE, ORDER_MODE, CUSTOMER_ID, ORDER_STATUS, ORDER_TOTAL, SALES_REP_ID, PROMOTION_ID)
+            VALUES (p_order_id, p_order_date, p_order_mode, p_customer_id, p_order_status, p_order_total, p_sales_rep_id, p_promotion_id);
+        ELSE
+            INSERT INTO ordersb2 (ORDER_ID, ORDER_DATE, ORDER_MODE, CUSTOMER_ID, ORDER_STATUS, ORDER_TOTAL, SALES_REP_ID, PROMOTION_ID)
+            VALUES (p_order_id, p_order_date, p_order_mode, p_customer_id, p_order_status, p_order_total, p_sales_rep_id, p_promotion_id);
+        END IF;
+        COMMIT;
     ELSE
         DBMS_OUTPUT.PUT_LINE('La orden con ORDER_ID ' || p_order_id || ' ya existe.');
     END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
 END;
 /
 
 
-CREATE OR REPLACE PROCEDURE insert_order_item(
+
+CREATE OR REPLACE PROCEDURE insert_order_item (
     p_order_id IN NUMBER,
     p_line_item_id IN NUMBER,
     p_product_id IN NUMBER,
     p_unit_price IN NUMBER,
     p_quantity IN NUMBER
-) AS
-    v_count NUMBER;
+) IS
+    v_region CHAR(1);
 BEGIN
-    SELECT COUNT(*) INTO v_count FROM ORDER_ITEMS WHERE ORDER_ID = p_order_id AND LINE_ITEM_ID = p_line_item_id;
-    IF v_count = 0 THEN
+    DBMS_MVIEW.REFRESH('MV_CUSTOMERS_GLOBAL', 'C');
+    SELECT REGION INTO v_region
+    FROM MV_CUSTOMERS_GLOBAL c
+    JOIN MV_ORDERS_GLOBAL o ON c.CUSTOMER_ID = o.CUSTOMER_ID
+    WHERE o.ORDER_ID = p_order_id;
+
+    IF v_region IN ('A', 'B') THEN
         INSERT INTO ORDER_ITEMS (ORDER_ID, LINE_ITEM_ID, PRODUCT_ID, UNIT_PRICE, QUANTITY)
         VALUES (p_order_id, p_line_item_id, p_product_id, p_unit_price, p_quantity);
     ELSE
-        DBMS_OUTPUT.PUT_LINE('El elemento de orden con ORDER_ID ' || p_order_id || ' y LINE_ITEM_ID ' || p_line_item_id || ' ya existe.');
+        INSERT INTO itemsb2 (ORDER_ID, LINE_ITEM_ID, PRODUCT_ID, UNIT_PRICE, QUANTITY)
+        VALUES (p_order_id, p_line_item_id, p_product_id, p_unit_price, p_quantity);
     END IF;
+
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
 END;
 /
+
 
 CREATE OR REPLACE PROCEDURE insert_product(
     p_product_id IN NUMBER,

@@ -38,7 +38,10 @@ def get_customer(customer_id):
     if conexion:
         try:
             cursor = conexion.cursor()
-            cursor.execute("SELECT * FROM CUSTOMERS WHERE CUSTOMER_ID = :1", [customer_id])
+
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_CUSTOMERS_GLOBAL', 'C'])
+
+            cursor.execute("SELECT * FROM MV_CUSTOMERS_GLOBAL WHERE CUSTOMER_ID = :1", [customer_id])
             result = cursor.fetchone()
             return result
         except oracledb.DatabaseError as e:
@@ -46,6 +49,7 @@ def get_customer(customer_id):
             msg.showerror("Error de Base de Datos", f"Error: {error.code}\nMensaje: {error.message}")
         finally:
             cursor.close()
+
 
 def update_customer(customer_id, first_name, last_name, credit_limit, email, income_level, region):
     conexion = conectar_bd()

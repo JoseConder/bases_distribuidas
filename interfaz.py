@@ -17,7 +17,7 @@ def conectar_bd():
         error, = e.args
         msg.showerror("Error de Conexión", f"Error: {error.code}\nMensaje: {error.message}")
         return None
-
+    
 def insert_customer(customer_id, first_name, last_name, credit_limit, email, income_level, region):
     conexion = conectar_bd()
     if conexion:
@@ -33,6 +33,7 @@ def insert_customer(customer_id, first_name, last_name, credit_limit, email, inc
             conexion.rollback()
 
 def get_customer(customer_id):
+    global conexion
     conexion = conectar_bd()
     if conexion:
         try:
@@ -60,7 +61,6 @@ def update_customer(customer_id, first_name, last_name, credit_limit, email, inc
             msg.showerror("Error de Base de Datos", f"Error: {error.code}\nMensaje: {error.message}")
         finally:
             cursor.close()
-            conexion.close()
 
 def delete_customer(customer_id):
     conexion = conectar_bd()
@@ -76,7 +76,6 @@ def delete_customer(customer_id):
             msg.showerror("Error de Base de Datos", f"Error: {error.code}\nMensaje: {error.message}")
         finally:
             cursor.close()
-            conexion.close()
 
 def clear_fields():
     entry_customer_id.delete(0, ctk.END)

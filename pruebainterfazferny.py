@@ -94,6 +94,10 @@ def show_customers():
         entry_region.delete(0, ctk.END)
 
     def insertar_cliente():
+        region_valida = entry_region.get().upper() in ['A', 'B', 'C', 'D']
+        if not region_valida:
+            msg.showerror("Error", "La región debe ser A, B, C o D.")
+            return
         insert_customer(
             entry_customer_id.get(),
             entry_first_name.get(),
@@ -101,10 +105,14 @@ def show_customers():
             entry_credit_limit.get(),
             entry_email.get(),
             entry_income_level.get(),
-            entry_region.get()
+            entry_region.get().upper()
         )
 
     def actualizar_cliente():
+        region_valida = entry_region.get().upper() in ['A', 'B', 'C', 'D']
+        if not region_valida:
+            msg.showerror("Error", "La región debe ser A, B, C o D.")
+            return
         update_customer(
             entry_customer_id.get(),
             entry_first_name.get(),
@@ -112,7 +120,7 @@ def show_customers():
             entry_credit_limit.get(),
             entry_email.get(),
             entry_income_level.get(),
-            entry_region.get()
+            entry_region.get().upper()
         )
 
     def eliminar_cliente():

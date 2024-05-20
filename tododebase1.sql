@@ -253,9 +253,11 @@ CREATE OR REPLACE PROCEDURE insert_customer(
 ) AS
     v_customer_count NUMBER;
 BEGIN
+    
+    DBMS_MVIEW.REFRESH('MV_CUSTOMERS_GLOBAL', 'C');
     SELECT COUNT(*)
     INTO v_customer_count
-    FROM CUSTOMERS
+    FROM mv_customers_global
     WHERE CUSTOMER_ID = p_customer_id;
 
     IF v_customer_count = 0 THEN

@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import oracledb
 import tkinter.messagebox as msg
+from datetime import datetime
 
 conexion = None
 
@@ -24,10 +25,7 @@ def insert_order(order_id, order_date, order_mode, customer_id, order_status, or
     if conexion:
         try:
             cursor = conexion.cursor()
-            cursor.execute("""
-                INSERT INTO ORDERS (ORDER_ID, ORDER_DATE, ORDER_MODE, CUSTOMER_ID, ORDER_STATUS, ORDER_TOTAL, SALES_REP_ID, PROMOTION_ID)
-                VALUES (:order_id, TO_TIMESTAMP(:order_date, 'YYYY-MM-DD HH24:MI:SS'), :order_mode, :customer_id, :order_status, :order_total, :sales_rep_id, :promotion_id)
-            """, {'order_id': order_id, 'order_date': order_date, 'order_mode': order_mode, 'customer_id': customer_id, 'order_status': order_status, 'order_total': order_total, 'sales_rep_id': sales_rep_id, 'promotion_id': promotion_id})
+            cursor.callproc("insert_order", [order_id, order_date, order_mode, customer_id, order_status, order_total, sales_rep_id, promotion_id])
             conexion.commit()
             msg.showinfo("Éxito", "Orden insertada correctamente.")
             clear_fields()
@@ -42,7 +40,8 @@ def get_order(order_id):
     if conexion:
         try:
             cursor = conexion.cursor()
-            cursor.execute("SELECT * FROM ORDERS WHERE ORDER_ID = :1", [order_id])
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_ORDERS_GLOBAL', 'C'])
+            cursor.execute("SELECT * FROM MV_ORDERS_GLOBAL WHERE ORDER_ID = :1", [order_id])
             result = cursor.fetchone()
             return result
         except oracledb.DatabaseError as e:
@@ -56,10 +55,7 @@ def update_order(order_id, order_date, order_mode, customer_id, order_status, or
     if conexion:
         try:
             cursor = conexion.cursor()
-            cursor.execute("""
-                UPDATE ORDERS SET ORDER_DATE = TO_TIMESTAMP(:order_date, 'YYYY-MM-DD HH24:MI:SS'), ORDER_MODE = :order_mode, CUSTOMER_ID = :customer_id, ORDER_STATUS = :order_status, ORDER_TOTAL = :order_total, SALES_REP_ID = :sales_rep_id, PROMOTION_ID = :promotion_id
-                WHERE ORDER_ID = :order_id
-            """, {'order_id': order_id, 'order_date': order_date, 'order_mode': order_mode, 'customer_id': customer_id, 'order_status': order_status, 'order_total': order_total, 'sales_rep_id': sales_rep_id, 'promotion_id': promotion_id})
+            cursor.callproc("update_order", [order_id, order_date, order_mode, customer_id, order_status, order_total, sales_rep_id, promotion_id])
             conexion.commit()
             msg.showinfo("Éxito", "Orden actualizada correctamente.")
             clear_fields()
@@ -73,7 +69,7 @@ def delete_order(order_id):
     if conexion:
         try:
             cursor = conexion.cursor()
-            cursor.execute("DELETE FROM ORDERS WHERE ORDER_ID = :1", [order_id])
+            cursor.callproc("delete_order", [order_id])
             conexion.commit()
             msg.showinfo("Éxito", "Orden eliminada correctamente.")
             clear_fields()
@@ -100,28 +96,44 @@ def clear_fields():
     entry_promotion_id.delete(0, ctk.END)
 
 def insertar_orden():
-    insert_order(
-        entry_order_id.get(),
-        entry_order_date.get(),
-        entry_order_mode.get(),
-        entry_customer_id.get(),
-        entry_order_status.get(),
-        entry_order_total.get(),
-        entry_sales_rep_id.get(),
-        entry_promotion_id.get()
-    )
+        try:
+            order_id = int(entry_order_id.get())
+            order_date_str = entry_order_date.get()
+            order_mode = entry_order_mode.get()
+            customer_id = int(entry_customer_id.get())
+            order_status = int(entry_order_status.get())
+            order_total = float(entry_order_total.get())
+            sales_rep_id = int(entry_sales_rep_id.get())
+            promotion_id = entry_promotion_id.get()
+            try:
+                order_date = datetime.strptime(order_date_str, '%Y-%m-%d %H:%M:%S')            
+            except ValueError:
+                msg.showerror("Error de Validación", "La fecha debe estar en el formato YYYY-MM-DD HH:MM:SS")
+                return
+            insert_order(order_id, order_date, order_mode, customer_id, order_status, order_total, sales_rep_id, promotion_id)
+        except ValueError as ve:
+            msg.showerror("Error de Validación", f"Error en el tipo de datos: {ve}")
+
 
 def actualizar_orden():
-    update_order(
-        entry_order_id.get(),
-        entry_order_date.get(),
-        entry_order_mode.get(),
-        entry_customer_id.get(),
-        entry_order_status.get(),
-        entry_order_total.get(),
-        entry_sales_rep_id.get(),
-        entry_promotion_id.get()
-    )
+    try:
+        order_id = int(entry_order_id.get())
+        order_date_str = entry_order_date.get()
+        order_mode = entry_order_mode.get()
+        customer_id = int(entry_customer_id.get())
+        order_status = int(entry_order_status.get())
+        order_total = float(entry_order_total.get())
+        sales_rep_id = int(entry_sales_rep_id.get())
+        promotion_id = entry_promotion_id.get()
+        try:
+            order_date = datetime.strptime(order_date_str, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            msg.showerror("Error de Validación", "La fecha debe estar en el formato YYYY-MM-DD HH:MM:SS")
+            return
+        update_order(order_id, order_date, order_mode, customer_id, order_status, order_total, sales_rep_id, promotion_id)
+    except ValueError as ve:
+        msg.showerror("Error de Validación", f"Error en el tipo de datos: {ve}")
+    
 
 def eliminar_orden():
     if msg.askyesno("Confirmar Eliminación", "¿Estás seguro de que deseas eliminar esta orden?"):
@@ -129,6 +141,7 @@ def eliminar_orden():
 
 def buscar_orden():
     order_id = entry_order_id.get()
+    print(order_id)
     order = get_order(order_id)
     if order:
         entry_order_date.delete(0, ctk.END)

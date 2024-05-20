@@ -357,7 +357,7 @@ END;
 /
 
 
-CREATE OR REPLACE PROCEDURE insert_product(
+create or replace NONEDITIONABLE PROCEDURE insert_product(
     p_product_id IN NUMBER,
     p_product_name IN VARCHAR2,
     p_product_description IN VARCHAR2,
@@ -376,11 +376,13 @@ BEGIN
     IF v_count = 0 THEN
         INSERT INTO PRODUCT_INFORMATION (PRODUCT_ID, PRODUCT_NAME, PRODUCT_DESCRIPTION, CATEGORY_ID, WEIGHT_CLASS, WARRANTY_PERIOD, SUPPLIER_ID, PRODUCT_STATUS, LIST_PRICE, MIN_PRICE, CATALOG_URL)
         VALUES (p_product_id, p_product_name, p_product_description, p_category_id, p_weight_class, p_warranty_period, p_supplier_id, p_product_status, p_list_price, p_min_price, p_catalog_url);
+
+        INSERT INTO productsb2 (PRODUCT_ID, PRODUCT_NAME, PRODUCT_DESCRIPTION, CATEGORY_ID, WEIGHT_CLASS, WARRANTY_PERIOD, SUPPLIER_ID, PRODUCT_STATUS, LIST_PRICE, MIN_PRICE, CATALOG_URL)
+        VALUES (p_product_id, p_product_name, p_product_description, p_category_id, p_weight_class, p_warranty_period, p_supplier_id, p_product_status, p_list_price, p_min_price, p_catalog_url);
     ELSE
         DBMS_OUTPUT.PUT_LINE('El producto con PRODUCT_ID ' || p_product_id || ' ya existe.');
     END IF;
 END;
-/
 
 
 --- updates

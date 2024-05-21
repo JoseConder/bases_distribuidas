@@ -1,6 +1,8 @@
 import customtkinter as ctk
 import oracledb
 import tkinter.messagebox as msg
+import tkinter as tk
+from tkinter import ttk
 
 conexion = None
 orders_window = None  
@@ -241,6 +243,21 @@ def close_window(window_name):
         products_window.destroy()
         products_window = None
 
+def show_table(title, headers, data):
+    table_window = tk.Toplevel()
+    table_window.title(title)
+    
+    table = ttk.Treeview(table_window, columns=headers, show='headings')
+    table.pack(fill='both', expand=True)
+
+    # Configurar los encabezados de las columnas
+    for header in headers:
+        table.heading(header, text=header)
+
+    # Insertar los datos en la tabla
+    for row in data:
+        table.insert('', 'end', values=row)
+
 def show_customer_table():
     try:
         conexion = conectar_bd()
@@ -248,15 +265,14 @@ def show_customer_table():
             cursor = conexion.cursor()
             cursor.execute("SELECT * FROM MV_CUSTOMERS_GLOBAL")
             rows = cursor.fetchall()
-            for row in rows:
-                print(row) 
+            headers = [i[0] for i in cursor.description]  # Obtener los encabezados de las columnas
+            show_table("Tabla de Clientes", headers, rows)
     except oracledb.DatabaseError as e:
         error, = e.args
         msg.showerror("Error de Base de Datos", f"Error: {error.code}\nMensaje: {error.message}")
     finally:
         if conexion:
             cursor.close()
-
 def show_order_table():
     try:
         conexion = conectar_bd()
@@ -264,15 +280,14 @@ def show_order_table():
             cursor = conexion.cursor()
             cursor.execute("SELECT * FROM MV_ORDERS_GLOBAL")
             rows = cursor.fetchall()
-            for row in rows:
-                print(row)  # Puedes adaptar este bucle para mostrar los datos en la interfaz gráfica
+            headers = [i[0] for i in cursor.description]  # Obtener los encabezados de las columnas
+            show_table("Tabla de Órdenes", headers, rows)
     except oracledb.DatabaseError as e:
         error, = e.args
         msg.showerror("Error de Base de Datos", f"Error: {error.code}\nMensaje: {error.message}")
     finally:
         if conexion:
             cursor.close()
-
 
 def show_product_table():
     try:
@@ -281,14 +296,15 @@ def show_product_table():
             cursor = conexion.cursor()
             cursor.execute("SELECT * FROM MV_PRODUCTS_GLOBAL")
             rows = cursor.fetchall()
-            for row in rows:
-                print(row)  # Puedes adaptar este bucle para mostrar los datos en la interfaz gráfica
+            headers = [i[0] for i in cursor.description]  # Obtener los encabezados de las columnas
+            show_table("Tabla de Productos", headers, rows)
     except oracledb.DatabaseError as e:
         error, = e.args
         msg.showerror("Error de Base de Datos", f"Error: {error.code}\nMensaje: {error.message}")
     finally:
         if conexion:
             cursor.close()
+
 
 # Función para manejar el evento de cierre de la ventana principal
 def on_closing():
@@ -299,7 +315,7 @@ def on_closing():
 # Crear la ventana principal
 window = ctk.CTk()
 window.title("Interfaz Principal") 
-window.geometry("400x150")  # Definir el tamaño de la ventana
+window.geometry("400x300")  # Definir el tamaño de la ventana
 window.protocol("WM_DELETE_WINDOW", on_closing)
 
 # Crear un frame para contener los botones

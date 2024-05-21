@@ -196,6 +196,7 @@ def show_customers():
     button_buscar.pack(padx=10, pady=10)
 
     app.mainloop()
+    
 def show_orders():
     # Aquí va el código para mostrar la información de órdenes
     print("Mostrando información de órdenes")

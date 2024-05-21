@@ -198,17 +198,43 @@ def show_customers():
     app.mainloop()
     
 def show_orders():
-    # Aquí va el código para mostrar la información de órdenes
-    print("Mostrando información de órdenes")
-def show_product_info():
-    # Aquí va el código para mostrar la información de órdenes
-    print("Mostrando información de órdenes")
+    orders_window = ctk.CTk()
+    orders_window.title("Órdenes")
+    orders_window.geometry("800x600")
+    
+    def on_closing_orders():
+        orders_window.destroy()  # Destruir la ventana de órdenes
 
+    import orders
+    orders.app.pack(fill="both", expand=True)
+    orders_window.mainloop()
+def show_product_info():
+    products_window = ctk.CTk()
+    products_window.title("Información de Productos")
+    products_window.geometry("800x600")
+
+    def on_closing_products():
+        products_window.destroy()  # Destruir la ventana de productos
+
+   
+    # Importa y muestra el contenido de products.py en esta nueva ventana
+    import products
+    products.app.pack(fill="both", expand=True)
+    products_window.mainloop()
+
+
+# Función para manejar el evento de cierre de la ventana principal
+def on_closing():
+    window.destroy()  # Destruir la ventana principal
+    import sys
+    sys.exit()  # Salir del programa
 
 # Crear la ventana principal
 window = ctk.CTk()
 window.title("Interfaz Principal") 
 window.geometry("400x150")  # Definir el tamaño de la ventana
+window.protocol("WM_DELETE_WINDOW", on_closing)
+
 
 # Crear un frame para contener los botones
 button_frame = ctk.CTkFrame(window)

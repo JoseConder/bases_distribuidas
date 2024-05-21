@@ -241,6 +241,55 @@ def close_window(window_name):
         products_window.destroy()
         products_window = None
 
+def show_customer_table():
+    try:
+        conexion = conectar_bd()
+        if conexion:
+            cursor = conexion.cursor()
+            cursor.execute("SELECT * FROM MV_CUSTOMERS_GLOBAL")
+            rows = cursor.fetchall()
+            for row in rows:
+                print(row) 
+    except oracledb.DatabaseError as e:
+        error, = e.args
+        msg.showerror("Error de Base de Datos", f"Error: {error.code}\nMensaje: {error.message}")
+    finally:
+        if conexion:
+            cursor.close()
+
+def show_order_table():
+    try:
+        conexion = conectar_bd()
+        if conexion:
+            cursor = conexion.cursor()
+            cursor.execute("SELECT * FROM MV_ORDERS_GLOBAL")
+            rows = cursor.fetchall()
+            for row in rows:
+                print(row)  # Puedes adaptar este bucle para mostrar los datos en la interfaz gráfica
+    except oracledb.DatabaseError as e:
+        error, = e.args
+        msg.showerror("Error de Base de Datos", f"Error: {error.code}\nMensaje: {error.message}")
+    finally:
+        if conexion:
+            cursor.close()
+
+
+def show_product_table():
+    try:
+        conexion = conectar_bd()
+        if conexion:
+            cursor = conexion.cursor()
+            cursor.execute("SELECT * FROM MV_PRODUCTS_GLOBAL")
+            rows = cursor.fetchall()
+            for row in rows:
+                print(row)  # Puedes adaptar este bucle para mostrar los datos en la interfaz gráfica
+    except oracledb.DatabaseError as e:
+        error, = e.args
+        msg.showerror("Error de Base de Datos", f"Error: {error.code}\nMensaje: {error.message}")
+    finally:
+        if conexion:
+            cursor.close()
+
 # Función para manejar el evento de cierre de la ventana principal
 def on_closing():
     window.destroy()  # Destruir la ventana principal
@@ -262,10 +311,20 @@ button_customers = ctk.CTkButton(button_frame, text="Clientes", command=show_cus
 button_orders = ctk.CTkButton(button_frame, text="Órdenes", command=show_orders)
 button_product_info = ctk.CTkButton(button_frame, text="Información de Productos", command=show_product_info)
 
+# Nuevos botones para mostrar tablas
+button_customer_table = ctk.CTkButton(button_frame, text="Mostrar Tabla de Clientes", command=show_customer_table)
+button_order_table = ctk.CTkButton(button_frame, text="Mostrar Tabla de Órdenes", command=show_order_table)
+button_product_table = ctk.CTkButton(button_frame, text="Mostrar Tabla de Productos", command=show_product_table)
+
 # Centrar los botones en el frame
 button_customers.pack(pady=10, padx=10, fill='x')
 button_orders.pack(pady=10, padx=10, fill='x')
 button_product_info.pack(pady=10, padx=10, fill='x')
+
+# Nuevos botones
+button_customer_table.pack(pady=10, padx=10, fill='x')
+button_order_table.pack(pady=10, padx=10, fill='x')
+button_product_table.pack(pady=10, padx=10, fill='x')
 
 # Mostrar la ventana principal
 window.mainloop()

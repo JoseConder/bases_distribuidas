@@ -294,7 +294,7 @@ def show_product_table():
         conexion = conectar_bd()
         if conexion:
             cursor = conexion.cursor()
-            cursor.execute("SELECT * FROM MV_PRODUCTS_GLOBAL")
+            cursor.execute("SELECT PRODUCT_ID, PRODUCT_NAME, PRODUCT_DESCRIPTION, CATEGORY_ID, WEIGHT_CLASS,TO_CHAR(WARRANTY_PERIOD, 'YY-MM') AS WARRANTY_PERIOD, SUPPLIER_ID,PRODUCT_STATUS, LIST_PRICE, MIN_PRICE, CATALOG_URL FROM MV_PRODUCTS_GLOBAL")
             rows = cursor.fetchall()
             headers = [i[0] for i in cursor.description]  # Obtener los encabezados de las columnas
             show_table("Tabla de Productos", headers, rows)
@@ -303,7 +303,7 @@ def show_product_table():
         msg.showerror("Error de Base de Datos", f"Error: {error.code}\nMensaje: {error.message}")
     finally:
         if conexion:
-            cursor.close()
+          cursor.close()
 
 
 # Función para manejar el evento de cierre de la ventana principal

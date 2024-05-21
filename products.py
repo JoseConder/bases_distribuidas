@@ -176,80 +176,79 @@ def buscar_producto():
     else:
         msg.showinfo("Resultado", "No se encontró el producto.")
 
-app = ctk.CTk()
-app.title("CRUD Productos")
+def create_app(parent):
 
-# Crear un frame para el formulario
-frame_form = ctk.CTkFrame(app)
-frame_form.pack(padx=10, pady=10, fill="both", expand=True)
+    global entry_product_id, entry_product_name, entry_product_description, entry_category_id, entry_weight_class, entry_warranty_period, entry_supplier_id, entry_product_status, entry_list_price, entry_min_price, entry_catalog_url
 
-# Añadir widgets al frame utilizando grid
-label_product_id = ctk.CTkLabel(frame_form, text="Product ID:")
-label_product_id.grid(row=0, column=0, padx=10, pady=5, sticky="e")
-entry_product_id = ctk.CTkEntry(frame_form)
-entry_product_id.grid(row=0, column=1, padx=10, pady=5)
 
-label_product_name = ctk.CTkLabel(frame_form, text="Product Name:")
-label_product_name.grid(row=1, column=0, padx=10, pady=5, sticky="e")
-entry_product_name = ctk.CTkEntry(frame_form)
-entry_product_name.grid(row=1, column=1, padx=10, pady=5)
+    frame_form = ctk.CTkFrame(parent)
+    frame_form.pack(padx=10, pady=10, fill="both", expand=True)
 
-label_product_description = ctk.CTkLabel(frame_form, text="Product Description:")
-label_product_description.grid(row=2, column=0, padx=10, pady=5, sticky="e")
-entry_product_description = ctk.CTkEntry(frame_form)
-entry_product_description.grid(row=2, column=1, padx=10, pady=5)
+    label_product_id = ctk.CTkLabel(frame_form, text="Product ID:")
+    label_product_id.grid(row=0, column=0, padx=10, pady=5, sticky="e")
+    entry_product_id = ctk.CTkEntry(frame_form)
+    entry_product_id.grid(row=0, column=1, padx=10, pady=5)
 
-label_category_id = ctk.CTkLabel(frame_form, text="Category ID:")
-label_category_id.grid(row=3, column=0, padx=10, pady=5, sticky="e")
-entry_category_id = ctk.CTkEntry(frame_form)
-entry_category_id.grid(row=3, column=1, padx=10, pady=5)
+    label_product_name = ctk.CTkLabel(frame_form, text="Product Name:")
+    label_product_name.grid(row=1, column=0, padx=10, pady=5, sticky="e")
+    entry_product_name = ctk.CTkEntry(frame_form)
+    entry_product_name.grid(row=1, column=1, padx=10, pady=5)
 
-label_weight_class = ctk.CTkLabel(frame_form, text="Weight Class:")
-label_weight_class.grid(row=4, column=0, padx=10, pady=5, sticky="e")
-entry_weight_class = ctk.CTkEntry(frame_form)
-entry_weight_class.grid(row=4, column=1, padx=10, pady=5)
+    label_product_description = ctk.CTkLabel(frame_form, text="Product Description:")
+    label_product_description.grid(row=2, column=0, padx=10, pady=5, sticky="e")
+    entry_product_description = ctk.CTkEntry(frame_form)
+    entry_product_description.grid(row=2, column=1, padx=10, pady=5)
 
-label_warranty_period = ctk.CTkLabel(frame_form, text="Warranty Period (Years-Months):")
-label_warranty_period.grid(row=5, column=0, padx=10, pady=5, sticky="e")
-entry_warranty_period = ctk.CTkEntry(frame_form)
-entry_warranty_period.grid(row=5, column=1, padx=10, pady=5)
+    label_category_id = ctk.CTkLabel(frame_form, text="Category ID:")
+    label_category_id.grid(row=3, column=0, padx=10, pady=5, sticky="e")
+    entry_category_id = ctk.CTkEntry(frame_form)
+    entry_category_id.grid(row=3, column=1, padx=10, pady=5)
 
-label_supplier_id = ctk.CTkLabel(frame_form, text="Supplier ID:")
-label_supplier_id.grid(row=6, column=0, padx=10, pady=5, sticky="e")
-entry_supplier_id = ctk.CTkEntry(frame_form)
-entry_supplier_id.grid(row=6, column=1, padx=10, pady=5)
+    label_weight_class = ctk.CTkLabel(frame_form, text="Weight Class:")
+    label_weight_class.grid(row=4, column=0, padx=10, pady=5, sticky="e")
+    entry_weight_class = ctk.CTkEntry(frame_form)
+    entry_weight_class.grid(row=4, column=1, padx=10, pady=5)
 
-label_product_status = ctk.CTkLabel(frame_form, text="Product Status:")
-label_product_status.grid(row=7, column=0, padx=10, pady=5, sticky="e")
-entry_product_status = ctk.CTkEntry(frame_form)
-entry_product_status.grid(row=7, column=1, padx=10, pady=5)
+    label_warranty_period = ctk.CTkLabel(frame_form, text="Warranty Period (Years-Months):")
+    label_warranty_period.grid(row=5, column=0, padx=10, pady=5, sticky="e")
+    entry_warranty_period = ctk.CTkEntry(frame_form)
+    entry_warranty_period.grid(row=5, column=1, padx=10, pady=5)
 
-label_list_price = ctk.CTkLabel(frame_form, text="List Price:")
-label_list_price.grid(row=8, column=0, padx=10, pady=5, sticky="e")
-entry_list_price = ctk.CTkEntry(frame_form)
-entry_list_price.grid(row=8, column=1, padx=10, pady=5)
+    label_supplier_id = ctk.CTkLabel(frame_form, text="Supplier ID:")
+    label_supplier_id.grid(row=6, column=0, padx=10, pady=5, sticky="e")
+    entry_supplier_id = ctk.CTkEntry(frame_form)
+    entry_supplier_id.grid(row=6, column=1, padx=10, pady=5)
 
-label_min_price = ctk.CTkLabel(frame_form, text="Min Price:")
-label_min_price.grid(row=9, column=0, padx=10, pady=5, sticky="e")
-entry_min_price = ctk.CTkEntry(frame_form)
-entry_min_price.grid(row=9, column=1, padx=10, pady=5)
+    label_product_status = ctk.CTkLabel(frame_form, text="Product Status:")
+    label_product_status.grid(row=7, column=0, padx=10, pady=5, sticky="e")
+    entry_product_status = ctk.CTkEntry(frame_form)
+    entry_product_status.grid(row=7, column=1, padx=10, pady=5)
 
-label_catalog_url = ctk.CTkLabel(frame_form, text="Catalog URL:")
-label_catalog_url.grid(row=10, column=0, padx=10, pady=5, sticky="e")
-entry_catalog_url = ctk.CTkEntry(frame_form)
-entry_catalog_url.grid(row=10, column=1, padx=10, pady=5)
+    label_list_price = ctk.CTkLabel(frame_form, text="List Price:")
+    label_list_price.grid(row=8, column=0, padx=10, pady=5, sticky="e")
+    entry_list_price = ctk.CTkEntry(frame_form)
+    entry_list_price.grid(row=8, column=1, padx=10, pady=5)
 
-# Añadir botones al frame utilizando grid
-button_insertar = ctk.CTkButton(frame_form, text="Insertar Producto", command=insertar_producto)
-button_insertar.grid(row=11, column=0, padx=10, pady=10, sticky="ew")
+    label_min_price = ctk.CTkLabel(frame_form, text="Min Price:")
+    label_min_price.grid(row=9, column=0, padx=10, pady=5, sticky="e")
+    entry_min_price = ctk.CTkEntry(frame_form)
+    entry_min_price.grid(row=9, column=1, padx=10, pady=5)
 
-button_actualizar = ctk.CTkButton(frame_form, text="Actualizar Producto", command=actualizar_producto)
-button_actualizar.grid(row=11, column=1, padx=10, pady=10, sticky="ew")
+    label_catalog_url = ctk.CTkLabel(frame_form, text="Catalog URL:")
+    label_catalog_url.grid(row=10, column=0, padx=10, pady=5, sticky="e")
+    entry_catalog_url = ctk.CTkEntry(frame_form)
+    entry_catalog_url.grid(row=10, column=1, padx=10, pady=5)
 
-button_eliminar = ctk.CTkButton(frame_form, text="Eliminar Producto", command=eliminar_producto)
-button_eliminar.grid(row=12, column=0, padx=10, pady=10, sticky="ew")
+    button_insertar = ctk.CTkButton(frame_form, text="Insertar Producto", command=insertar_producto)
+    button_insertar.grid(row=11, column=0, padx=10, pady=10, sticky="ew")
 
-button_buscar = ctk.CTkButton(frame_form, text="Buscar Producto", command=buscar_producto)
-button_buscar.grid(row=12, column=1, padx=10, pady=10, sticky="ew")
+    button_actualizar = ctk.CTkButton(frame_form, text="Actualizar Producto", command=actualizar_producto)
+    button_actualizar.grid(row=11, column=1, padx=10, pady=10, sticky="ew")
 
-app.mainloop()
+    button_eliminar = ctk.CTkButton(frame_form, text="Eliminar Producto", command=eliminar_producto)
+    button_eliminar.grid(row=12, column=0, padx=10, pady=10, sticky="ew")
+
+    button_buscar = ctk.CTkButton(frame_form, text="Buscar Producto", command=buscar_producto)
+    button_buscar.grid(row=12, column=1, padx=10, pady=10, sticky="ew")
+
+    return frame_form

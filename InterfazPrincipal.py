@@ -32,6 +32,7 @@ def insert_customer(customer_id, first_name, last_name, credit_limit, email, inc
             cursor = conexion.cursor()
             cursor.callproc("insert_customer", [customer_id, first_name, last_name, credit_limit, email, income_level, region])
             conexion.commit()
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_CUSTOMERS_GLOBAL', 'C'])
             msg.showinfo("Éxito", "Cliente insertado correctamente.")
             clear_fields()
         except oracledb.DatabaseError as e:
@@ -64,6 +65,8 @@ def update_customer(customer_id, first_name, last_name, credit_limit, email, inc
             cursor = conexion.cursor()
             cursor.callproc("update_customer", [customer_id, first_name, last_name, credit_limit, email, income_level, region])
             conexion.commit()
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_CUSTOMERS_GLOBAL', 'C'])
+
             msg.showinfo("Éxito", "Cliente actualizado correctamente.")
             clear_fields()  # Limpiar los campos después de la actualización
         except oracledb.DatabaseError as e:
@@ -79,6 +82,7 @@ def delete_customer(customer_id):
             cursor = conexion.cursor()
             cursor.callproc("delete_customer", [customer_id])
             conexion.commit()
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_CUSTOMERS_GLOBAL', 'C'])
             msg.showinfo("Éxito", "Cliente eliminado correctamente.")
             clear_fields()  # Limpiar los campos después de la eliminación
         except oracledb.DatabaseError as e:
@@ -157,8 +161,7 @@ def show_customers():
 
     global entry_customer_id, entry_first_name, entry_last_name, entry_credit_limit, entry_email, entry_income_level, entry_region
 
-    customers_window = ctk.CTk()
-    customers_window.title("Clientes")
+
     
     app = ctk.CTk()
     app.title("CRUD Clientes")

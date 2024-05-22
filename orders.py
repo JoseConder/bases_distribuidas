@@ -19,7 +19,21 @@ def conectar_bd():
         error, = e.args
         msg.showerror("Error de Conexión", f"Error: {error.code}\nMensaje: {error.message}")
         return None
-
+def customer_exists(customer_id):
+    conexion = conectar_bd()
+    if conexion:
+        try:
+            cursor = conexion.cursor()
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_CUSTOMERS_GLOBAL', 'C'])
+            cursor.execute("SELECT COUNT(*) FROM MV_CUSTOMERS_GLOBAL WHERE CUSTOMER_ID = :1", [customer_id])
+            count = cursor.fetchone()[0]
+            return count > 0
+        except oracledb.DatabaseError as e:
+            error, = e.args
+            msg.showerror("Error de Base de Datos", f"Error: {error.code}\nMensaje: {error.message}")
+        finally:
+            cursor.close()
+    return False
 def insert_order(order_id, order_date, order_mode, customer_id, order_status, order_total, sales_rep_id, promotion_id):
     conexion = conectar_bd()
     if conexion:
@@ -27,6 +41,8 @@ def insert_order(order_id, order_date, order_mode, customer_id, order_status, or
             cursor = conexion.cursor()
             cursor.callproc("insert_order", [order_id, order_date, order_mode, customer_id, order_status, order_total, sales_rep_id, promotion_id])
             conexion.commit()
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_ORDERS_GLOBAL', 'C'])
+
             msg.showinfo("Éxito", "Orden insertada correctamente.")
             clear_fields()
         except oracledb.DatabaseError as e:
@@ -57,6 +73,8 @@ def update_order(order_id, order_date, order_mode, customer_id, order_status, or
             cursor = conexion.cursor()
             cursor.callproc("update_order", [order_id, order_date, order_mode, customer_id, order_status, order_total, sales_rep_id, promotion_id])
             conexion.commit()
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_ORDERS_GLOBAL', 'C'])
+
             msg.showinfo("Éxito", "Orden actualizada correctamente.")
             clear_fields()
         except oracledb.DatabaseError as e:
@@ -71,6 +89,8 @@ def delete_order(order_id):
             cursor = conexion.cursor()
             cursor.callproc("delete_order", [order_id])
             conexion.commit()
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_ORDERS_GLOBAL', 'C'])
+
             msg.showinfo("Éxito", "Orden eliminada correctamente.")
             clear_fields()
         except oracledb.IntegrityError as e:
@@ -109,6 +129,10 @@ def insertar_orden():
                 order_date = datetime.strptime(order_date_str, '%Y-%m-%d %H:%M:%S')            
             except ValueError:
                 msg.showerror("Error de Validación", "La fecha debe estar en el formato YYYY-MM-DD HH:MM:SS")
+
+                return
+            if not customer_exists(customer_id):
+                msg.showerror("Error", f"El cliente con ID {customer_id} no existe.")
                 return
             insert_order(order_id, order_date, order_mode, customer_id, order_status, order_total, sales_rep_id, promotion_id)
         except ValueError as ve:
@@ -143,6 +167,7 @@ def buscar_orden():
     order_id = entry_order_id.get()
     print(order_id)
     order = get_order(order_id)
+    print(type(order))
     if order:
         entry_order_date.delete(0, ctk.END)
         entry_order_date.insert(0, order[1].strftime('%Y-%m-%d %H:%M:%S') if order[1] else "")

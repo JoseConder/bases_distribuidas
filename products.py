@@ -26,6 +26,8 @@ def insert_product(product_id, product_name, product_description, category_id, w
             cursor = conexion.cursor()
             cursor.callproc("insert_product", [product_id, product_name, product_description, category_id, weight_class, warranty_period, supplier_id, product_status, list_price, min_price, catalog_url])
             conexion.commit()
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_PRODUCTS_GLOBAL', 'C'])
+
             msg.showinfo("Éxito", "Producto insertado correctamente.")
             clear_fields()
         except oracledb.DatabaseError as e:
@@ -56,6 +58,7 @@ def update_product(product_id, product_name, product_description, category_id, w
             cursor = conexion.cursor()
             cursor.callproc("update_product", [product_id, product_name, product_description, category_id, weight_class, warranty_period, supplier_id, product_status, list_price, min_price, catalog_url])
             conexion.commit()
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_PRODUCTS_GLOBAL', 'C'])
             msg.showinfo("Éxito", "Producto actualizado correctamente.")
             clear_fields()
         except oracledb.DatabaseError as e:
@@ -70,6 +73,7 @@ def delete_product(product_id):
             cursor = conexion.cursor()
             cursor.callproc("delete_product", [product_id])
             conexion.commit()
+            cursor.callproc("DBMS_MVIEW.REFRESH", ['MV_PRODUCTS_GLOBAL', 'C'])
             msg.showinfo("Éxito", "Producto eliminado correctamente.")
             clear_fields()
         except oracledb.IntegrityError as e:
